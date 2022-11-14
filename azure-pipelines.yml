@@ -1,0 +1,48 @@
+resources:
+  repositories: 
+    - repository: terraform_azurerm_storage_account
+      type: git
+      name: terraform_azurerm_storage_account
+
+parameters:
+- name: dryrun
+  displayName: Dry Run? (Do not apply any changes)
+  type: boolean
+  default: true
+- name: environment
+  displayName: Environment
+  type: string
+  default: dev
+  values:
+  - dev
+  - uat
+  - prod
+- name: deploystorage
+  displayName: Deploy Storage Layer?
+  type: boolean  
+  default: true
+- name: deployfunction
+  displayName: Deploy Function Layer?
+  type: boolean  
+  default: true
+
+trigger: none
+
+stages:
+- stage: storage   
+  condition: eq('${{ parameters.deploystorage }}', 'true')
+  jobs:    
+    - template: pipelines/template.yaml
+      parameters:
+        environment: ${{ parameters.environment }}
+        directory: storage
+        dryrun:  ${{ parameters.dryrun }}
+        
+- stage: function
+  condition: eq('${{ parameters.deployfunction }}', 'true')
+  jobs:
+    - template: pipelines/template.yaml
+      parameters:
+        environment: ${{ parameters.environment }}
+        directory: functions
+        dryrun:  ${{ parameters.dryrun }}
